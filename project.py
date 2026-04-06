@@ -50,13 +50,12 @@ with tab1:
     st.warning("Reminder: Submit your 3R Seminar topics by Friday.")
 
 with tab2:
+    with tab2:
     st.subheader("🪄 Ask Your AI Genie")
     user_query = st.text_input("Ask me anything (Thanglish is okay!):", key="genie_input")
+    
     if user_query:
         with st.spinner("Genie is thinking..."):
-            if user_query:
-        with st.spinner("Genie is thinking..."):
-            # The most stable payload format for the cloud
             payload = {
                 "contents": [
                     {"parts": [{"text": user_query}]}
@@ -64,7 +63,7 @@ with tab2:
             }
             try:
                 # Making sure the request waits long enough for the cloud server
-                response = requests.post(URL, json=payload, timeout=10)
+                response = requests.post(URL, json=payload, timeout=15)
                 
                 if response.status_code == 200:
                     result = response.json()
@@ -72,8 +71,7 @@ with tab2:
                     st.markdown("### 🧞 Genie says:")
                     st.write(answer)
                 else:
-                    # This will help us see the REAL error if it fails
-                    st.error(f"Genie's door is stuck (Error {response.status_code}). Check your API Key!")
+                    st.error(f"Genie's door is stuck (Error {response.status_code}).")
             except Exception as e:
                 st.error(f"Connection Failed: {e}")
 
