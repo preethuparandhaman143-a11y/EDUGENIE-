@@ -3,9 +3,10 @@ import os
 import base64
 import requests
 
-# --- 1. THE BRAIN SETUP ---
+# --- 1. THE STABLE ENGINE (GEMINI 1.5 FLASH) ---
+# This key and model are set for maximum stability to avoid 403 errors.
 API_KEY = "AIzaSyD-lFSiJA98bpXrHxWuyCildY8hdDnupMI"
-URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={API_KEY}"
+URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 def get_base64(bin_file):
     if os.path.exists(bin_file):
@@ -14,99 +15,119 @@ def get_base64(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# --- 2. STYLE ENGINE ---
+# --- 2. THE DESIGN ENGINE (INSTAGRAM VIBE) ---
 st.set_page_config(page_title="EduGenie", layout="centered")
 img_base64 = get_base64("ocean.jpg") or get_base64("ocean.png")
 
 st.markdown(f"""
     <style>
     .stApp {{
-        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
                     url("data:image/png;base64,{img_base64}");
         background-size: cover;
-        background-attachment: fixed;
     }}
-    button[data-baseweb="tab"] p {{ font-size: 26px !important; font-weight: bold !important; color: #00d4ff !important; }}
-    h1, h3, p, label {{ color: white !important; }}
-    .profile-card {{
+    /* INSTAGRAM PROFILE BOX */
+    .ig-profile {{
         background: rgba(255, 255, 255, 0.1);
-        padding: 20px;
         border-radius: 20px;
+        padding: 30px;
         text-align: center;
-        border: 1px solid #00d4ff;
+        border: 1px solid #ffffff33;
     }}
+    .ig-stats {{
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        font-weight: bold;
+    }}
+    /* ROLE TAGS */
+    .tag-admin {{ background: #ff4b4b; padding: 2px 8px; border-radius: 5px; font-size: 12px; }}
+    .tag-rep {{ background: #00d4ff; padding: 2px 8px; border-radius: 5px; font-size: 12px; }}
+    .tag-student {{ background: #444; padding: 2px 8px; border-radius: 5px; font-size: 12px; }}
+    
+    button[data-baseweb="tab"] p {{ font-size: 20px !important; font-weight: bold !important; color: white !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. THE APP UI ---
-st.title("🧞 EduGenie")
-st.write("Welcome dude!")
+# --- 3. GLOBAL STATE MANAGEMENT ---
+if "user_role" not in st.session_state:
+    st.session_state.user_role = "Student"
+if "user_id" not in st.session_state:
+    st.session_state.user_id = "user_79"
+if "group_chats" not in st.session_state:
+    st.session_state.group_chats = {
+        "Public Lounge (Open)": [{"id": "@Staff_HOD", "role": "Admin", "msg": "Welcome everyone!"}],
+        "ML Private Group": [{"id": "@Prof_Raj", "role": "Admin", "msg": "Only for ML students."}],
+        "Rep Council": [{"id": "@Class_Rep", "role": "Representative", "msg": "Meeting at 4pm."}]
+    }
 
-tab1, tab2, tab3 = st.tabs(["💬 Chat", "🪄 AI Genie", "👤 Profile"])
+# --- 4. APP NAVIGATION ---
+st.title("🧞 EduGenie")
+tab1, tab2, tab3 = st.tabs(["💬 Groups", "🪄 AI Genie", "👤 Profile"])
 
 with tab1:
-    st.subheader("💬 Classroom Hub")
+    st.subheader("Classroom Hub")
     
-    # Group Selection Sidebar
-    st.sidebar.title("🏫 My Groups")
-    group_choice = st.sidebar.radio("Select a Class:", ["AI & DS Batch", "ML Seminar Group", "3R Project Team"])
+    # ACCESSIBLE CONTROL (SIDEBAR)
+    st.sidebar.title("🔐 Access Control")
+    selected_group = st.sidebar.selectbox("Choose Group:", list(st.session_state.group_chats.keys()))
     
-    # Initialize Group Memory
-    if "group_chats" not in st.session_state:
-        st.session_state.group_chats = {
-            "AI & DS Batch": [{"id": "@Staff_HOD", "msg": "Welcome to the AI Batch group!"}],
-            "ML Seminar Group": [{"id": "@Staff_ML", "msg": "Notes are pinned."}],
-            "3R Project Team": [{"id": "@System", "msg": "Team created."}]
-        }
-
-    st.info(f"Viewing: **{group_choice}**")
-
-    # Display Messages
-    for chat in st.session_state.group_chats[group_choice]:
-        st.markdown(f"**{chat['id']}**: {chat['msg']}")
-
-    # Pull ID from Profile
-    current_user_id = st.session_state.get('user_id', "@User_Genie")
+    # Logic: Who can access?
+    can_access = True
+    if "Private" in selected_group and st.session_state.user_role == "Student":
+        can_access = False
+        st.error("🚫 Access Denied: This group is for Admins and Representatives only.")
     
-    if prompt := st.chat_input(f"Chatting as {current_user_id}..."):
-        st.session_state.group_chats[group_choice].append({"id": current_user_id, "msg": prompt})
-        st.rerun()
+    if can_access:
+        st.write(f"Logged in as: **{st.session_state.user_id}** ({st.session_state.user_role})")
+        for chat in st.session_state.group_chats[selected_group]:
+            role_class = f"tag-{chat['role'].lower()}"
+            st.markdown(f"<span class='{role_class}'>{chat['role']}</span> **{chat['id']}**: {chat['msg']}", unsafe_allow_html=True)
+
+        if prompt := st.chat_input("Message..."):
+            st.session_state.group_chats[selected_group].append({
+                "id": f"@{st.session_state.user_id}",
+                "role": st.session_state.user_role,
+                "msg": prompt
+            })
+            st.rerun()
 
 with tab2:
     st.subheader("🪄 Ask Your AI Genie")
     user_query = st.text_input("Ask me anything:", key="genie_input")
     if user_query:
-        with st.spinner("Genie is thinking..."):
-            payload = {"contents": [{"parts": [{"text": user_query}]}]}
+        with st.spinner("Processing..."):
             try:
-                response = requests.post(URL, json=payload, timeout=15)
-                if response.status_code == 200:
-                    st.markdown("### 🧞 Genie says:")
-                    st.write(response.json()['candidates'][0]['content']['parts'][0]['text'])
+                # Direct JSON payload for maximum stability
+                payload = {"contents": [{"parts": [{"text": user_query}]}]}
+                res = requests.post(URL, json=payload, timeout=15)
+                if res.status_code == 200:
+                    st.write(res.json()['candidates'][0]['content']['parts'][0]['text'])
                 else:
-                    st.error(f"Error {response.status_code}")
+                    st.error(f"Error {res.status_code}: Please refresh the page.")
             except:
-                st.error("Connection error!")
+                st.error("Check connection.")
 
 with tab3:
-    st.subheader("👤 Academic Dashboard")
-    st.markdown('<div class="profile-card">', unsafe_allow_html=True)
+    # INSTAGRAM STYLE PROFILE
+    st.markdown('<div class="ig-profile">', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Change Photo", type=["jpg", "png", "jpeg"])
-    if uploaded_file is not None:
-        st.image(uploaded_file, width=150)
+    if uploaded_file:
+        st.image(uploaded_file, width=120)
+    else:
+        st.write("📸")
     
-    # Save the ID to session state so Tab 1 can see it
-    user_id_input = st.text_input("Edit Unique ID", value="@User_Genie")
-    st.session_state.user_id = user_id_input
+    st.session_state.user_id = st.text_input("Username", value=st.session_state.user_id)
     
-    st.write(f"**Current User:** {st.session_state.user_id}")
+    # ROLE SELECTOR (FOR THE USER)
+    st.session_state.user_role = st.selectbox("Account Type", ["Student", "Representative", "Admin"])
+    
+    st.markdown(f"""
+        <div class="ig-stats">
+            <div>12<br><span style="font-size:12px; color:gray;">Courses</span></div>
+            <div>450<br><span style="font-size:12px; color:gray;">Points</span></div>
+            <div>{st.session_state.user_role}<br><span style="font-size:12px; color:gray;">Rank</span></div>
+        </div>
+        <button style="width:100%; border-radius:5px; border:none; padding:5px;">Edit Profile</button>
+    """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.divider()
-    col1, col2 = st.columns(2)
-    with col1:
-        st.button("📁 Module 1: ML", use_container_width=True)
-        st.button("📁 Module 2: DBMS", use_container_width=True)
-    with col2:
-        st.button("📁 Module 3: OS", use_container_width=True)
-        st.button("📁 Module 4: Networks", use_container_width=True)
