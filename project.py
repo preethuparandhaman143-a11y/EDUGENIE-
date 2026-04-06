@@ -4,7 +4,7 @@ import base64
 import requests
 
 # --- 1. THE BRAIN SETUP ---
-API_KEY = "AIzaSyD-lFSiJA98bpXrHxWuyCildY8hdDnupMI"
+API_KEY = "AIzaSyAeR71bgrPCMTdHl8PHPSeXRrK1RRYfXWY"
 URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={API_KEY}"
 
 def get_base64(bin_file):
