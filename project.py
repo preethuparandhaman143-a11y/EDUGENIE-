@@ -4,8 +4,9 @@ import base64
 import requests
 import time
 
-# --- 1. THE STABLE ENGINE (GEMINI 1.5 FLASH) ---
+# --- 1. THE STABLE ENGINE (LOCKED VERSION) ---
 API_KEY = "AIzaSyD-lFSiJA98bpXrHxWuyCildY8hdDnupMI"
+# Using the most globally accessible stable endpoint
 URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 def get_base64(bin_file):
@@ -15,7 +16,7 @@ def get_base64(bin_file):
         return base64.b64encode(data).decode()
     return ""
 
-# --- 2. STYLE ENGINE (BIG TABS & IG PROFILE) ---
+# --- 2. STYLE ENGINE (BIG TABS & DESIGN) ---
 st.set_page_config(page_title="EduGenie", layout="centered")
 img_base64 = get_base64("ocean.jpg") or get_base64("ocean.png")
 
@@ -26,7 +27,6 @@ st.markdown(f"""
                     url("data:image/png;base64,{img_base64}");
         background-size: cover;
     }}
-    /* BIG TABS SIZE */
     button[data-baseweb="tab"] p {{ 
         font-size: 24px !important; 
         font-weight: bold !important; 
@@ -44,7 +44,7 @@ st.markdown(f"""
         width: 110px; height: 110px; border-radius: 50%; 
         border: 3px solid #e1306c; margin: 0 auto;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(255,255,255,0.1); font-size: 12px;
+        background: rgba(255,255,255,0.1); font-size: 14px;
     }}
     .tag-admin {{ background: #ff4b4b; padding: 2px 8px; border-radius: 5px; font-size: 11px; color: white; }}
     .tag-representative {{ background: #00d4ff; padding: 2px 8px; border-radius: 5px; font-size: 11px; color: white; }}
@@ -88,38 +88,39 @@ with tab1:
 
 with tab2:
     st.subheader("🪄 Ask Your AI Genie")
-    user_query = st.text_input("Ask me anything:", placeholder="Type and press Enter...")
+    # Added clear instructions for the user
+    user_query = st.text_input("Ask me anything:", placeholder="Type here and press ENTER", key="genie_box")
+    
     if user_query:
-        with st.spinner("Genie is connecting..."):
-            # REINFORCED CONNECTION LOGIC
-            for attempt in range(4):
-                try:
-                    payload = {"contents": [{"parts": [{"text": user_query}]}]}
-                    res = requests.post(URL, json=payload, timeout=25)
-                    if res.status_code == 200:
-                        st.write(res.json()['candidates'][0]['content']['parts'][0]['text'])
-                        break
-                    else:
-                        time.sleep(1.5) # Wait and retry
-                except:
-                    if attempt == 3:
-                        st.warning("Network flicker detected. Please tap Enter once more.")
-                    time.sleep(1)
+        # The spinner ensures the user sees that the "Genie" is actually working
+        with st.status("🧞 Genie is searching for your answer...", expanded=True) as status:
+            payload = {"contents": [{"parts": [{"text": user_query}]}]}
+            try:
+                # Increased timeout and direct handling
+                res = requests.post(URL, json=payload, timeout=30)
+                if res.status_code == 200:
+                    answer = res.json()['candidates'][0]['content']['parts'][0]['text']
+                    status.update(label="✅ Answer Found!", state="complete", expanded=False)
+                    st.markdown("### 🧞 Genie says:")
+                    st.write(answer)
+                else:
+                    status.update(label="❌ Genie is busy. Please try again.", state="error")
+            except Exception as e:
+                status.update(label="❌ Connection Timeout. Try again.", state="error")
 
 with tab3:
     st.markdown('<div class="ig-profile">', unsafe_allow_html=True)
-    # Profile Circle with "Add Pic" label
-    st.markdown('<div class="ig-avatar">Add Pic</div>', unsafe_allow_html=True)
+    st.markdown('<div class="ig-avatar"><b>Add Pic</b></div>', unsafe_allow_html=True)
     st.write(f"### @{st.session_state.user_id}")
     
     uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
     if uploaded_file:
-        st.image(uploaded_file, width=100)
+        st.image(uploaded_file, width=120)
     
-    col_a, col_b = st.columns(2)
-    with col_a:
+    c1, c2 = st.columns(2)
+    with c1:
         st.session_state.user_id = st.text_input("Username", value=st.session_state.user_id)
-    with col_b:
+    with c2:
         st.session_state.user_role = st.selectbox("Role", ["Student", "Representative", "Admin"])
     
     st.markdown(f"""
