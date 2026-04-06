@@ -46,49 +46,32 @@ tab1, tab2, tab3 = st.tabs(["💬 Chat", "🪄 AI Genie", "👤 Profile"])
 
 with tab1:
     st.subheader("📢 Classroom Broadcasts")
-    st.info("Staff: Machine Learning Unit 2 Notes are now available in the dashboard.")
+    st.info("Staff: Machine Learning Unit 2 Notes are now available.")
     st.warning("Reminder: Submit your 3R Seminar topics by Friday.")
 
 with tab2:
-    with tab2:
     st.subheader("🪄 Ask Your AI Genie")
     user_query = st.text_input("Ask me anything (Thanglish is okay!):", key="genie_input")
     
     if user_query:
         with st.spinner("Genie is thinking..."):
-            payload = {
-                "contents": [
-                    {"parts": [{"text": user_query}]}
-                ]
-            }
+            payload = {"contents": [{"parts": [{"text": user_query}]}]}
             try:
-                # Making sure the request waits long enough for the cloud server
                 response = requests.post(URL, json=payload, timeout=15)
-                
                 if response.status_code == 200:
-                    result = response.json()
-                    answer = result['candidates'][0]['content']['parts'][0]['text']
                     st.markdown("### 🧞 Genie says:")
-                    st.write(answer)
+                    st.write(response.json()['candidates'][0]['content']['parts'][0]['text'])
                 else:
                     st.error(f"Genie's door is stuck (Error {response.status_code}).")
-            except Exception as e:
-                st.error(f"Connection Failed: {e}")
+            except:
+                st.error("Connection error! Check your internet.")
 
 with tab3:
     st.subheader("👤 Academic Dashboard")
-    
-    # INSTAGRAM STYLE PROFILE SECTION
     st.markdown('<div class="profile-card">', unsafe_allow_html=True)
-    
-    # 1. Profile Photo Uploader
     uploaded_file = st.file_uploader("Change Profile Photo", type=["jpg", "png", "jpeg"])
     if uploaded_file is not None:
         st.image(uploaded_file, width=150)
-    else:
-        st.write("📸 No Photo Uploaded")
-
-    # 2. Unique ID / Name Change
     user_id = st.text_input("Edit Unique ID / Name", value="@User_Genie")
     st.write(f"**Current User:** {user_id}")
     st.markdown('</div>', unsafe_allow_html=True)
