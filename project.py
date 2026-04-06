@@ -45,9 +45,39 @@ st.write("Welcome dude!")
 tab1, tab2, tab3 = st.tabs(["💬 Chat", "🪄 AI Genie", "👤 Profile"])
 
 with tab1:
-    st.subheader("📢 Classroom Broadcasts")
-    st.info("Staff: Machine Learning Unit 2 Notes are now available.")
-    st.warning("Reminder: Submit your 3R Seminar topics by Friday.")
+    with tab1:
+    st.subheader("💬 Classroom Hub")
+    
+    # 1. Create a Sidebar for Groups
+    st.sidebar.title("🏫 My Groups")
+    group_choice = st.sidebar.radio("Select a Class:", ["AI & DS Batch", "ML Seminar Group", "3R Project Team"])
+    
+    # 2. Initialize Memory for Groups
+    if "group_chats" not in st.session_state:
+        st.session_state.group_chats = {
+            "AI & DS Batch": [{"id": "@Staff_HOD", "msg": "Welcome to the official AI batch group!"}],
+            "ML Seminar Group": [{"id": "@Staff_ML", "msg": "Notes for Unit 2 are pinned."}],
+            "3R Project Team": [{"id": "@System", "msg": "Group created for 3R Seminar."}]
+        }
+
+    st.info(f"Currently viewing: **{group_choice}**")
+
+    # 3. Display Chat for the Selected Group
+    for chat in st.session_state.group_chats[group_choice]:
+        # Using IDs instead of names
+        st.markdown(f"**{chat['id']}**: {chat['msg']}")
+
+    # 4. Input with Your Unique ID
+    # This pulls the ID you set in the Profile Tab!
+    current_user_id = st.session_state.get('user_id', "@User_Genie")
+    
+    if prompt := st.chat_input(f"Chatting as {current_user_id}..."):
+        # Add message to the specific group memory
+        st.session_state.group_chats[group_choice].append({
+            "id": current_user_id, 
+            "msg": prompt
+        })
+        st.rerun()
 
 with tab2:
     st.subheader("🪄 Ask Your AI Genie")
