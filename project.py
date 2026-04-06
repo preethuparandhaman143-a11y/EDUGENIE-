@@ -16,7 +16,7 @@ def get_base64(bin_file):
 
 # --- 2. STYLE ENGINE ---
 st.set_page_config(page_title="EduGenie", layout="centered")
-img_base64 = get_base64("bg_dark.png/ocean.jpg") or get_base64("bg_dark.png/ocean.png")
+img_base64 = get_base64("ocean.jpg") or get_base64("ocean.png")
 
 st.markdown(f"""
     <style>
