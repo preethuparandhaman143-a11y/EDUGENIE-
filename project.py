@@ -54,16 +54,28 @@ with tab2:
     user_query = st.text_input("Ask me anything (Thanglish is okay!):", key="genie_input")
     if user_query:
         with st.spinner("Genie is thinking..."):
-            payload = {"contents": [{"parts": [{"text": user_query}]}]}
+            if user_query:
+        with st.spinner("Genie is thinking..."):
+            # The most stable payload format for the cloud
+            payload = {
+                "contents": [
+                    {"parts": [{"text": user_query}]}
+                ]
+            }
             try:
-                response = requests.post(URL, json=payload)
+                # Making sure the request waits long enough for the cloud server
+                response = requests.post(URL, json=payload, timeout=10)
+                
                 if response.status_code == 200:
+                    result = response.json()
+                    answer = result['candidates'][0]['content']['parts'][0]['text']
                     st.markdown("### 🧞 Genie says:")
-                    st.write(response.json()['candidates'][0]['content']['parts'][0]['text'])
+                    st.write(answer)
                 else:
-                    st.error("Genie is resting. Try again in a bit!")
-            except:
-                st.error("Connection error!")
+                    # This will help us see the REAL error if it fails
+                    st.error(f"Genie's door is stuck (Error {response.status_code}). Check your API Key!")
+            except Exception as e:
+                st.error(f"Connection Failed: {e}")
 
 with tab3:
     st.subheader("👤 Academic Dashboard")
