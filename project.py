@@ -64,10 +64,30 @@ with tab1:
         st.session_state.group_chats[selected_group].append({"role": st.session_state.user_id, "msg": group_msg})
         st.rerun()
 
-# --- TAB 2: AI GENIE (CLEAN INDENTATION) ---
+# --- TAB 2: AI GENIE ---
 with tab2:
     st.subheader("🪄 Ask Your AI Genie")
     
     # Display chat history
-    for message in st.session_state.messages:
-        with st.chat_message(message
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    # Chat Input Logic
+    if prompt := st.chat_input("Ask me about ML, 3R, or anything..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
+            try:
+                res = requests.post(URL, json=payload, params={'key': API_KEY}, timeout=30)
+                if res.status_code == 200:
+                    answer = res.json()['candidates'][0]['content']['parts'][0]['text']
+                    st.markdown(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                else:
+                    st.error(f"Genie is sleeping (Error {res.status_code})")
+            except:
+                st.error("The Genie is slow. Try again!")
