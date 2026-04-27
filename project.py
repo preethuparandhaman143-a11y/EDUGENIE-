@@ -5,9 +5,9 @@ import requests
 import time
 
 # --- 1. THE STABLE ENGINE (LOCKED VERSION) ---
-API_KEY = "AIzaSyD-1FSIJA98bpXrHxWuyCildY8hdDnupMI"
-URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-
+# --- 1. THE STABLE ENGINE (LOCKED VERSION) ---
+API_KEY = "AIzaSyBWklIysRD_7978YEYxxoFs3aVZMAflBKw"
+URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -66,20 +66,24 @@ with tab2:
 
     if prompt := st.chat_input("Ask me about ML, 3R, or anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
+       with st.chat_message("assistant"):
             payload = {"contents": [{"parts": [{"text": prompt}]}]}
             try:
-                res = requests.post(URL, json=payload, timeout=30)
+                # We move the API_KEY into the 'params' for better security/stability
+                res = requests.post(
+                    URL, 
+                    json=payload, 
+                    params={'key': API_KEY}, 
+                    timeout=30
+                )
+                
                 if res.status_code == 200:
                     answer = res.json()['candidates'][0]['content']['parts'][0]['text']
                     st.markdown(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})
                 else:
-                    st.error("Genie is sleeping. Check API Key.")
-            except:
+                    st.error(f"Genie is sleeping. Error Code: {res.status_code}")
+            except Exception as e:
                 st.error("Connection timeout. Try again.")
 
 # --- TAB 3: PROFILE ---
