@@ -7,7 +7,7 @@ import time
 # --- 1. THE STABLE ENGINE (LOCKED VERSION) ---
 # Using your new API key and the more stable v1beta endpoint
 API_KEY = "AIzaSyBWklIysRD_7978YEYxxoFs3aVZMAflBKw"
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+URL = URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 def get_base64(bin_file):
     if os.path.exists(bin_file):
